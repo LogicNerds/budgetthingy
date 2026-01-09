@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgeting Thingy</title>
+    <style>
+        :root {
+            --primary-start: #2c5f7a;
+            --primary-end: #1a3a4a;
+            --accent-primary: #0d9488;
+            --accent-secondary: #0f766e;
+            --accent-bg: #f0fdfa;
+            --balance-start: #0d9488;
+            --balance-end: #0f766e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 50px rgba(0,0,0,0.2);
+        }
+
+        /* Login Screen */
+        .login-screen {
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
+        }
+
+        .login-screen h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .login-screen p {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 40px;
+            font-size: 0.95em;
+            font-style: italic;
+            line-height: 1.4;
+            max-width: 300px;
+        }
+
+        .google-signin-btn {
+            background: white;
+            color: #333;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+            margin: 0 auto;
+        }
+
+        .google-signin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .google-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
+            color: white;
+            padding: 25px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.2s;
+        }
+
+        .theme-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px 20px 80px 20px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            color: var(--accent-primary);
+        }
+
+        .nav-tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        /* Dashboard Overview Cards */
+        .overview-card {
+            background: linear-gradient(135deg, var(--balance-start) 0%, var(--balance-end) 100%);
+            border-radius: 16px;
+            padding: 25px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+        }
+
+        .overview-card h2 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .overview-stat h3 {
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+            font-weight: 400;
+        }
+
+        .overview-stat .amount {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        /* Budget Cards */
+        .budget-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .budget-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 3px 10px rgba(13, 148, 136, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .budget-info h4 {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .budget-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .delete-btn {
+            color: #dc2626;
+        }
+
+        .budget-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .budget-stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .budget-stat-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .variance {
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .variance.over {
+            color: #dc2626;
+        }
+
+        .variance.under {
+            color: #059669;
+        }
+
+        .variance.neutral {
+            color: #666;
+        }
+
+        /* Category Section */
+        .category-section {
+            background: #f9fafb;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .category-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .category-totals {
+            text-align: right;
+        }
+
+        .category-total-label {
+            font-size: 0.75em;
+            color: #666;
+        }
+
+        .category-total-value {
+            font-size: 1em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Item Card */
+        .item-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.15);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .item-description {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .item-supplier {
+            font-size: 0.8em;
+            color: #999;
+            font-style: italic;
+        }
+
+        .item-amounts {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .item-amount-group {
+            text-align: center;
+        }
+
+        .item-amount-label {
+            font-size: 0.7em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .item-amount-value {
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Back Button */
+        .back-btn {
+            background: white;
+            border: 2px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-bg);
+        }
+
+        /* Action Buttons */
+        .add-btn {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            border: 2px dashed var(--accent-primary);
+            color: var(--accent-primary);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: var(--accent-bg);
+        }
+
+        .action-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .form-group input:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .emoji-btn {
+            font-size: 1.8em;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-primary);
+        }
+
+        .emoji-btn.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-bg);
+            transform: scale(1.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 148, 136, 0.4);
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Theme Modal */
+        .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-option:hover {
+            border-color: var(--accent-primary);
+            background: #f9fafb;
+        }
+
+        .theme-preview {
+            width: 80px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .theme-preview-color {
+            flex: 1;
+        }
+
+        .theme-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 0.85em;
+            z-index: 999;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .footer a {
+            color: #a8edea;
+            text-decoration: none;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Disclaimer Drawer */
+        .disclaimer-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+
+        .disclaimer-drawer.open {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .disclaimer-content {
+            padding: 30px 20px 80px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .disclaimer-content h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .disclaimer-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .disclaimer-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: #999;
+            padding: 5px 10px;
+        }
+
+        .disclaimer-close:hover {
+            color: #333;
+        }
+
+        .disclaimer-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .disclaimer-overlay.active {
+            display: block;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .emoji-picker {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .budget-stats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .item-amounts {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <h1>📊 Budgeting Thingy</h1>
+        <p>Budget your things with Budgeting Thingy</p>
+        <button class="google-signin-btn" onclick="signInWithGoogle()">
+            <svg class="google-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign in with Google
+        </button>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="container hidden">
+        <div class="header">
+            <div class="header-left">
+                <button class="theme-btn" onclick="showThemeModal()" title="Change Theme">🎨</button>
+                <span style="font-size: 1.2em; font-weight: 600;">Budgeting Thingy</span>
+            </div>
+            <div class="header-right">
+                <img id="userAvatar" class="user-avatar" src="" alt="User">
+                <button class="logout-btn" onclick="signOut()">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showDashboard()">Dashboard</button>
+                <button class="nav-tab" onclick="showBudgetsList()">All Budgets</button>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboardView">
+                <div class="overview-card">
+                    <h2>Overall Summary</h2>
+                    <div class="overview-stats">
+                        <div class="overview-stat">
+                            <h3>Total Planned</h3>
+                            <div class="amount" id="totalPlanned">$0.00</div>
+                        </div>
+                        <div class="overview-stat">
+                            <h3>Total Actual</h3>
+                            <div class="amount" id="totalActual">$0.00</div>
+                        </div>
+                        <div class="overview-stat">
+                            <h3>Variance</h3>
+                            <div class="amount" id="totalVariance">$0.00</div>
+                        </div>
+                        <div class="overview-stat">
+                            <h3>Active Budgets</h3>
+                            <div class="amount" id="activeBudgets">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #333;">Your Budgets</h3>
+                <div id="dashboardBudgetsList"></div>
+                
+                <button class="add-btn" onclick="showAddBudgetModal()">+ Create New Budget</button>
+            </div>
+
+            <!-- Budgets List View -->
+            <div id="budgetsListView" class="hidden">
+                <button class="add-btn" onclick="showAddBudgetModal()" style="margin-bottom: 20px;">+ Create New Budget</button>
+                <div id="budgetsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Detail View -->
+    <div id="budgetDetailView" class="container hidden">
+        <div class="header">
+            <div class="header-left">
+                <button class="theme-btn" onclick="showThemeModal()" title="Change Theme">🎨</button>
+                <span style="font-size: 1.2em; font-weight: 600;">Budgeting Thingy</span>
+            </div>
+            <div class="header-right">
+                <img id="userAvatar2" class="user-avatar" src="" alt="User">
+                <button class="logout-btn" onclick="signOut()">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <button class="back-btn" onclick="backToMainView()">← Back to Dashboard</button>
+
+            <!-- Budget Summary -->
+            <div class="overview-card">
+                <h2 id="budgetDetailName">Budget Name</h2>
+                <div class="overview-stats">
+                    <div class="overview-stat">
+                        <h3>Total Planned</h3>
+                        <div class="amount" id="budgetPlanned">$0.00</div>
+                    </div>
+                    <div class="overview-stat">
+                        <h3>Total Actual</h3>
+                        <div class="amount" id="budgetActual">$0.00</div>
+                    </div>
+                    <div class="overview-stat">
+                        <h3>Variance</h3>
+                        <div class="amount" id="budgetVariance">$0.00</div>
+                    </div>
+                    <div class="overview-stat">
+                        <h3>% of Budget</h3>
+                        <div class="amount" id="budgetPercent">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="add-btn" onclick="showAddCategoryModal()">+ Add Category</button>
+
+            <!-- Categories and Items -->
+            <div id="categoriesList"></div>
+        </div>
+    </div>
+
+    <!-- Add Budget Modal -->
+    <div id="addBudgetModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Budget</h2>
+            <div class="form-group">
+                <label>Budget Name</label>
+                <input type="text" id="budgetName" placeholder="e.g., January 2026, Q1 Budget">
+            </div>
+            <div class="form-group">
+                <label>Pick an Emoji</label>
+                <div class="emoji-picker" id="budgetEmojiPicker">
+                    <button type="button" class="emoji-btn selected" data-emoji="📊">📊</button>
+                    <button type="button" class="emoji-btn" data-emoji="💰">💰</button>
+                    <button type="button" class="emoji-btn" data-emoji="💸">💸</button>
+                    <button type="button" class="emoji-btn" data-emoji="📈">📈</button>
+                    <button type="button" class="emoji-btn" data-emoji="💼">💼</button>
+                    <button type="button" class="emoji-btn" data-emoji="🎯">🎯</button>
+                    <button type="button" class="emoji-btn" data-emoji="📅">📅</button>
+                    <button type="button" class="emoji-btn" data-emoji="🏢">🏢</button>
+                    <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                    <button type="button" class="emoji-btn" data-emoji="⭐">⭐</button>
+                    <button type="button" class="emoji-btn" data-emoji="💡">💡</button>
+                    <button type="button" class="emoji-btn" data-emoji="🚀">🚀</button>
+                </div>
+                <input type="hidden" id="selectedBudgetEmoji" value="📊">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('addBudgetModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="addBudget()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <h2>Add Category</h2>
+            <div class="form-group">
+                <label>Category Name</label>
+                <input type="text" id="categoryName" placeholder="e.g., Marketing, Operations, Salaries">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="addCategory()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Item Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <h2 id="itemModalTitle">Add Item</h2>
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="itemName" placeholder="e.g., Facebook Ads, Office Supplies">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="itemDescription" placeholder="Brief description of this expense"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Supplier/Vendor</label>
+                <input type="text" id="itemSupplier" placeholder="e.g., Meta, Amazon">
+            </div>
+            <div class="form-group">
+                <label>Planned Cost (Spend)</label>
+                <input type="number" id="itemSpend" placeholder="0.00" step="0.01" min="0">
+                <small id="spendLockedNote" style="color: #999; display: none;">* Spend amount is locked after save</small>
+            </div>
+            <div id="actualSection" style="display: none;">
+                <div class="form-group">
+                    <label>Actual Cost</label>
+                    <input type="number" id="itemActual" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Date of Actual Spend</label>
+                    <input type="date" id="itemActualDate">
+                </div>
+                <div class="form-group">
+                    <label>Reason for Variance <span style="color: #dc2626;">*</span></label>
+                    <textarea id="itemVarianceReason" placeholder="Required if actual differs from planned"></textarea>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('itemModal')">Cancel</button>
+                <button class="modal-btn primary" id="itemModalSaveBtn" onclick="saveItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div id="themeModal" class="modal">
+        <div class="modal-content">
+            <h2>Choose Your Theme</h2>
+            <div class="theme-option" onclick="setTheme('coral')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #fb7185"></div>
+                    <div class="theme-preview-color" style="background: #fda4af"></div>
+                    <div class="theme-preview-color" style="background: #fecdd3"></div>
+                </div>
+                <div class="theme-name">Coral Rose (Feminine)</div>
+            </div>
+            <div class="theme-option" onclick="setTheme('lavender')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #a78bfa"></div>
+                    <div class="theme-preview-color" style="background: #c4b5fd"></div>
+                    <div class="theme-preview-color" style="background: #e9d5ff"></div>
+                </div>
+                <div class="theme-name">Lavender Dream (Feminine)</div>
+            </div>
+            <div class="theme-option" onclick="setTheme('navy')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #1e3a8a"></div>
+                    <div class="theme-preview-color" style="background: #475569"></div>
+                    <div class="theme-preview-color" style="background: #64748b"></div>
+                </div>
+                <div class="theme-name">Navy Steel (Masculine)</div>
+            </div>
+            <div class="theme-option" onclick="setTheme('charcoal')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #374151"></div>
+                    <div class="theme-preview-color" style="background: #3b82f6"></div>
+                    <div class="theme-preview-color" style="background: #60a5fa"></div>
+                </div>
+                <div class="theme-name">Charcoal Blue (Masculine)</div>
+            </div>
+            <div class="theme-option" onclick="setTheme('sage')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #84cc16"></div>
+                    <div class="theme-preview-color" style="background: #a3e635"></div>
+                    <div class="theme-preview-color" style="background: #d9f99d"></div>
+                </div>
+                <div class="theme-name">Sage Mint (Neutral)</div>
+            </div>
+            <div class="theme-option" onclick="setTheme('warmgray')">
+                <div class="theme-preview">
+                    <div class="theme-preview-color" style="background: #78716c"></div>
+                    <div class="theme-preview-color" style="background: #f59e0b"></div>
+                    <div class="theme-preview-color" style="background: #fbbf24"></div>
+                </div>
+                <div class="theme-name">Warm Gray Amber (Neutral)</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('themeModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disclaimer Overlay -->
+    <div id="disclaimerOverlay" class="disclaimer-overlay" onclick="closeDisclaimer()"></div>
+
+    <!-- Disclaimer Drawer -->
+    <div id="disclaimerDrawer" class="disclaimer-drawer">
+        <button class="disclaimer-close" onclick="closeDisclaimer()">×</button>
+        <div class="disclaimer-content">
+            <h3>Disclaimer</h3>
+            <p>This application is provided for business budgeting and tracking purposes only. Budgeting Thingy is not a licensed financial or accounting application and should not be treated as such.</p>
+            <p>Users are solely responsible for the accuracy of data entered and any financial decisions made. This tool does not replace professional accounting, bookkeeping, or financial advisory services.</p>
+            <p>Logic Nerds and its affiliates assume no liability for any losses, damages, or consequences arising from the use or misuse of this application. This software is provided "as is" without warranty of any kind, express or implied.</p>
+            <p>By using this application, you acknowledge and accept full responsibility for your business budgeting decisions and data accuracy.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        © 2026 Logic Nerds. All Rights Reserved. | <a onclick="openDisclaimer()">Disclaimer</a>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as firebaseSignOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtBO48uBogqcdv69VO9IH7MIG8Kb1YG10",
+            authDomain: "idk-money-tracker.firebaseapp.com",
+            projectId: "idk-money-tracker",
+            storageBucket: "idk-money-tracker.firebasestorage.app",
+            messagingSenderId: "1033439716188",
+            appId: "1:1033439716188:web:ebf8c149f68d3d568f9799",
+            measurementId: "G-KEZSNJZ4JW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global variables
+        let currentUser = null;
+        let budgets = [];
+        let categories = [];
+        let items = [];
+        let selectedBudget = null;
+        let selectedCategory = null;
+        let editingItem = null;
+        let selectedBudgetEmoji = '📊';
+        let unsubscribeBudgets = null;
+        let unsubscribeCategories = null;
+        let unsubscribeItems = null;
+
+        // Make functions globally available
+        window.signInWithGoogle = signInWithGoogle;
+        window.signOut = signOut;
+        window.showDashboard = showDashboard;
+        window.showBudgetsList = showBudgetsList;
+        window.showAddBudgetModal = showAddBudgetModal;
+        window.addBudget = addBudget;
+        window.deleteBudget = deleteBudget;
+        window.viewBudgetDetail = viewBudgetDetail;
+        window.backToMainView = backToMainView;
+        window.showAddCategoryModal = showAddCategoryModal;
+        window.addCategory = addCategory;
+        window.deleteCategory = deleteCategory;
+        window.showAddItemModal = showAddItemModal;
+        window.editItem = editItem;
+        window.saveItem = saveItem;
+        window.deleteItem = deleteItem;
+        window.closeModal = closeModal;
+        window.showThemeModal = showThemeModal;
+        window.setTheme = setTheme;
+        window.openDisclaimer = openDisclaimer;
+        window.closeDisclaimer = closeDisclaimer;
+
+        // Auth state observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                showMainApp();
+                loadUserData();
+            } else {
+                currentUser = null;
+                showLoginScreen();
+            }
+        });
+
+        // Auth functions
+        async function signInWithGoogle() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('Sign in error:', error);
+                alert('Sign in failed. Please try again.');
+            }
+        }
+
+        async function signOut() {
+            if (confirm('Are you sure you want to sign out?')) {
+                try {
+                    if (unsubscribeBudgets) unsubscribeBudgets();
+                    if (unsubscribeCategories) unsubscribeCategories();
+                    if (unsubscribeItems) unsubscribeItems();
+                    await firebaseSignOut(auth);
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                    alert('Sign out failed. Please try again.');
+                }
+            }
+        }
+
+        // Screen management
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('budgetDetailView').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('budgetDetailView').classList.add('hidden');
+            
+            if (currentUser.photoURL) {
+                document.getElementById('userAvatar').src = currentUser.photoURL;
+                document.getElementById('userAvatar2').src = currentUser.photoURL;
+            }
+
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('budgetsListView').classList.add('hidden');
+            updateDashboard();
+        }
+
+        function showBudgetsList() {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab')[1].classList.add('active');
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('budgetsListView').classList.remove('hidden');
+            updateBudgetsList();
+        }
+
+        function viewBudgetDetail(budgetId) {
+            selectedBudget = budgetId;
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('budgetDetailView').classList.remove('hidden');
+            updateBudgetDetailView();
+        }
+
+        function backToMainView() {
+            selectedBudget = null;
+            selectedCategory = null;
+            document.getElementById('budgetDetailView').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            showDashboard();
+        }
+
+        // Load user data
+        function loadUserData() {
+            // Load budgets
+            const budgetsQuery = query(
+                collection(db, 'budgets'),
+                where('userId', '==', currentUser.uid)
+            );
+            
+            unsubscribeBudgets = onSnapshot(budgetsQuery, (snapshot) => {
+                budgets = [];
+                snapshot.forEach((doc) => {
+                    budgets.push({ id: doc.id, ...doc.data() });
+                });
+                updateUI();
+            });
+
+            // Load categories
+            const categoriesQuery = query(
+                collection(db, 'budgetCategories'),
+                where('userId', '==', currentUser.uid)
+            );
+            
+            unsubscribeCategories = onSnapshot(categoriesQuery, (snapshot) => {
+                categories = [];
+                snapshot.forEach((doc) => {
+                    categories.push({ id: doc.id, ...doc.data() });
+                });
+                updateUI();
+            });
+
+            // Load items
+            const itemsQuery = query(
+                collection(db, 'budgetItems'),
+                where('userId', '==', currentUser.uid)
+            );
+            
+            unsubscribeItems = onSnapshot(itemsQuery, (snapshot) => {
+                items = [];
+                snapshot.forEach((doc) => {
+                    items.push({ id: doc.id, ...doc.data() });
+                });
+                updateUI();
+            });
+        }
+
+        // Emoji picker setup
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('#budgetEmojiPicker .emoji-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectedBudgetEmoji = this.getAttribute('data-emoji');
+                    document.getElementById('selectedBudgetEmoji').value = selectedBudgetEmoji;
+                    
+                    document.querySelectorAll('#budgetEmojiPicker .emoji-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+        });
+
+        // Budget management
+        function showAddBudgetModal() {
+            document.getElementById('addBudgetModal').classList.add('active');
+            document.getElementById('budgetName').value = '';
+            selectedBudgetEmoji = '📊';
+            
+            document.querySelectorAll('#budgetEmojiPicker .emoji-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector('#budgetEmojiPicker .emoji-btn').classList.add('selected');
+        }
+
+        async function addBudget() {
+            const name = document.getElementById('budgetName').value.trim();
+            
+            if (!name) {
+                alert('Please enter a budget name!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'budgets'), {
+                    userId: currentUser.uid,
+                    name: name,
+                    emoji: selectedBudgetEmoji,
+                    createdAt: serverTimestamp()
+                });
+                
+                closeModal('addBudgetModal');
+            } catch (error) {
+                console.error('Error adding budget:', error);
+                alert('Failed to create budget. Please try again.');
+            }
+        }
+
+        async function deleteBudget(budgetId, event) {
+            event.stopPropagation();
+            
+            const budget = budgets.find(b => b.id === budgetId);
+            
+            if (confirm(`Delete "${budget.emoji} ${budget.name}" and all its categories and items?`)) {
+                try {
+                    // Delete all items in this budget
+                    const budgetItems = items.filter(i => i.budgetId === budgetId);
+                    for (const item of budgetItems) {
+                        await deleteDoc(doc(db, 'budgetItems', item.id));
+                    }
+
+                    // Delete all categories in this budget
+                    const budgetCategories = categories.filter(c => c.budgetId === budgetId);
+                    for (const category of budgetCategories) {
+                        await deleteDoc(doc(db, 'budgetCategories', category.id));
+                    }
+
+                    // Delete the budget
+                    await deleteDoc(doc(db, 'budgets', budgetId));
+                    
+                    if (selectedBudget === budgetId) {
+                        backToMainView();
+                    }
+                } catch (error) {
+                    console.error('Error deleting budget:', error);
+                    alert('Failed to delete budget. Please try again.');
+                }
+            }
+        }
+
+        // Category management
+        function showAddCategoryModal() {
+            if (!selectedBudget) {
+                alert('No budget selected!');
+                return;
+            }
+            document.getElementById('addCategoryModal').classList.add('active');
+            document.getElementById('categoryName').value = '';
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('categoryName').value.trim();
+            
+            if (!name) {
+                alert('Please enter a category name!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'budgetCategories'), {
+                    userId: currentUser.uid,
+                    budgetId: selectedBudget,
+                    name: name,
+                    createdAt: serverTimestamp()
+                });
+                
+                closeModal('addCategoryModal');
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Failed to add category. Please try again.');
+            }
+        }
+
+        async function deleteCategory(categoryId, event) {
+            event.stopPropagation();
+            
+            const category = categories.find(c => c.id === categoryId);
+            
+            if (confirm(`Delete category "${category.name}" and all its items?`)) {
+                try {
+                    // Delete all items in this category
+                    const categoryItems = items.filter(i => i.categoryId === categoryId);
+                    for (const item of categoryItems) {
+                        await deleteDoc(doc(db, 'budgetItems', item.id));
+                    }
+
+                    // Delete the category
+                    await deleteDoc(doc(db, 'budgetCategories', categoryId));
+                } catch (error) {
+                    console.error('Error deleting category:', error);
+                    alert('Failed to delete category. Please try again.');
+                }
+            }
+        }
+
+        // Item management
+        function showAddItemModal(categoryId) {
+            selectedCategory = categoryId;
+            editingItem = null;
+            
+            document.getElementById('itemModalTitle').textContent = 'Add Item';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemDescription').value = '';
+            document.getElementById('itemSupplier').value = '';
+            document.getElementById('itemSpend').value = '';
+            document.getElementById('itemSpend').disabled = false;
+            document.getElementById('spendLockedNote').style.display = 'none';
+            document.getElementById('actualSection').style.display = 'none';
+            document.getElementById('itemModalSaveBtn').textContent = 'Save';
+            
+            document.getElementById('itemModal').classList.add('active');
+        }
+
+        function editItem(itemId, event) {
+            event.stopPropagation();
+            
+            const item = items.find(i => i.id === itemId);
+            editingItem = itemId;
+            selectedCategory = item.categoryId;
+            
+            document.getElementById('itemModalTitle').textContent = 'Edit Item';
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemDescription').value = item.description || '';
+            document.getElementById('itemSupplier').value = item.supplier || '';
+            document.getElementById('itemSpend').value = item.spend;
+            document.getElementById('itemSpend').disabled = true;
+            document.getElementById('spendLockedNote').style.display = 'block';
+            
+            document.getElementById('actualSection').style.display = 'block';
+            document.getElementById('itemActual').value = item.actual || '';
+            document.getElementById('itemActualDate').value = item.actualDate || '';
+            document.getElementById('itemVarianceReason').value = item.varianceReason || '';
+            document.getElementById('itemModalSaveBtn').textContent = 'Update';
+            
+            document.getElementById('itemModal').classList.add('active');
+        }
+
+        async function saveItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const description = document.getElementById('itemDescription').value.trim();
+            const supplier = document.getElementById('itemSupplier').value.trim();
+            const spend = parseFloat(document.getElementById('itemSpend').value) || 0;
+            const actual = parseFloat(document.getElementById('itemActual').value) || null;
+            const actualDate = document.getElementById('itemActualDate').value || null;
+            const varianceReason = document.getElementById('itemVarianceReason').value.trim();
+            
+            if (!name) {
+                alert('Please enter an item name!');
+                return;
+            }
+
+            if (spend <= 0 && !editingItem) {
+                alert('Please enter a valid planned cost!');
+                return;
+            }
+
+            // Check if variance reason is required
+            if (actual !== null && actual !== spend && !varianceReason) {
+                alert('Please provide a reason for the variance between planned and actual!');
+                return;
+            }
+
+            try {
+                if (editingItem) {
+                    // Update existing item
+                    await updateDoc(doc(db, 'budgetItems', editingItem), {
+                        name: name,
+                        description: description,
+                        supplier: supplier,
+                        actual: actual,
+                        actualDate: actualDate,
+                        varianceReason: varianceReason
+                    });
+                } else {
+                    // Create new item
+                    await addDoc(collection(db, 'budgetItems'), {
+                        userId: currentUser.uid,
+                        budgetId: selectedBudget,
+                        categoryId: selectedCategory,
+                        name: name,
+                        description: description,
+                        supplier: supplier,
+                        spend: spend,
+                        actual: null,
+                        actualDate: null,
+                        varianceReason: null,
+                        createdAt: serverTimestamp()
+                    });
+                }
+                
+                closeModal('itemModal');
+                updateBudgetDetailView();
+            } catch (error) {
+                console.error('Error saving item:', error);
+                alert('Failed to save item. Please try again.');
+            }
+        }
+
+        async function deleteItem(itemId, event) {
+            event.stopPropagation();
+            
+            const item = items.find(i => i.id === itemId);
+            
+            if (confirm(`Delete item "${item.name}"?`)) {
+                try {
+                    await deleteDoc(doc(db, 'budgetItems', itemId));
+                } catch (error) {
+                    console.error('Error deleting item:', error);
+                    alert('Failed to delete item. Please try again.');
+                }
+            }
+        }
+
+        // Calculation helpers
+        function calculateBudgetTotals(budgetId) {
+            const budgetItems = items.filter(i => i.budgetId === budgetId);
+            const totalPlanned = budgetItems.reduce((sum, item) => sum + (item.spend || 0), 0);
+            const totalActual = budgetItems.reduce((sum, item) => sum + (item.actual || 0), 0);
+            const variance = totalActual - totalPlanned;
+            const percent = totalPlanned > 0 ? (totalActual / totalPlanned * 100) : 0;
+            
+            return { totalPlanned, totalActual, variance, percent };
+        }
+
+        function calculateCategoryTotals(categoryId) {
+            const categoryItems = items.filter(i => i.categoryId === categoryId);
+            const totalPlanned = categoryItems.reduce((sum, item) => sum + (item.spend || 0), 0);
+            const totalActual = categoryItems.reduce((sum, item) => sum + (item.actual || 0), 0);
+            const variance = totalActual - totalPlanned;
+            
+            return { totalPlanned, totalActual, variance };
+        }
+
+        function formatVariance(variance, includePercent = false, total = 0) {
+            const absVariance = Math.abs(variance);
+            let text = `$${absVariance.toFixed(2)}`;
+            
+            if (includePercent && total > 0) {
+                const percent = Math.abs((variance / total) * 100);
+                text += ` (${percent.toFixed(1)}%)`;
+            }
+            
+            if (variance > 0) {
+                return `<span class="variance over">+${text} over</span>`;
+            } else if (variance < 0) {
+                return `<span class="variance under">${text} under</span>`;
+            } else {
+                return `<span class="variance neutral">On Budget</span>`;
+            }
+        }
+
+        // UI updates
+        function updateUI() {
+            if (document.getElementById('dashboardView').classList.contains('hidden') === false) {
+                updateDashboard();
+            }
+            if (document.getElementById('budgetsListView').classList.contains('hidden') === false) {
+                updateBudgetsList();
+            }
+            if (document.getElementById('budgetDetailView').classList.contains('hidden') === false) {
+                updateBudgetDetailView();
+            }
+        }
+
+        function updateDashboard() {
+            // Calculate overall totals
+            let grandTotalPlanned = 0;
+            let grandTotalActual = 0;
+            
+            budgets.forEach(budget => {
+                const totals = calculateBudgetTotals(budget.id);
+                grandTotalPlanned += totals.totalPlanned;
+                grandTotalActual += totals.totalActual;
+            });
+            
+            const grandVariance = grandTotalActual - grandTotalPlanned;
+            
+            document.getElementById('totalPlanned').textContent = '$' + grandTotalPlanned.toFixed(2);
+            document.getElementById('totalActual').textContent = '$' + grandTotalActual.toFixed(2);
+            document.getElementById('totalVariance').textContent = '$' + Math.abs(grandVariance).toFixed(2);
+            document.getElementById('activeBudgets').textContent = budgets.length;
+            
+            // Update dashboard budgets list
+            const list = document.getElementById('dashboardBudgetsList');
+            
+            if (budgets.length === 0) {
+                list.innerHTML = '<div class="no-data">No budgets yet. Create one to get started!</div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            budgets.forEach(budget => {
+                const totals = calculateBudgetTotals(budget.id);
+                const card = document.createElement('div');
+                card.className = 'budget-card';
+                card.onclick = () => viewBudgetDetail(budget.id);
+                
+                card.innerHTML = `
+                    <div class="budget-header">
+                        <div class="budget-info">
+                            <h4>${budget.emoji} ${budget.name}</h4>
+                        </div>
+                        <div class="budget-actions">
+                            <button class="icon-btn delete-btn" onclick="deleteBudget('${budget.id}', event)" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="budget-stats">
+                        <div>
+                            <div class="budget-stat-label">Planned</div>
+                            <div class="budget-stat-value">$${totals.totalPlanned.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="budget-stat-label">Actual</div>
+                            <div class="budget-stat-value">$${totals.totalActual.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="budget-stat-label">Variance</div>
+                            <div class="budget-stat-value">$${Math.abs(totals.variance).toFixed(2)}</div>
+                            ${formatVariance(totals.variance, true, totals.totalPlanned)}
+                        </div>
+                    </div>
+                `;
+                
+                list.appendChild(card);
+            });
+        }
+
+        function updateBudgetsList() {
+            const list = document.getElementById('budgetsList');
+            
+            if (budgets.length === 0) {
+                list.innerHTML = '<div class="no-data">No budgets yet. Create one to get started!</div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            budgets.forEach(budget => {
+                const totals = calculateBudgetTotals(budget.id);
+                const card = document.createElement('div');
+                card.className = 'budget-card';
+                card.onclick = () => viewBudgetDetail(budget.id);
+                
+                card.innerHTML = `
+                    <div class="budget-header">
+                        <div class="budget-info">
+                            <h4>${budget.emoji} ${budget.name}</h4>
+                        </div>
+                        <div class="budget-actions">
+                            <button class="icon-btn delete-btn" onclick="deleteBudget('${budget.id}', event)" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="budget-stats">
+                        <div>
+                            <div class="budget-stat-label">Planned</div>
+                            <div class="budget-stat-value">$${totals.totalPlanned.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="budget-stat-label">Actual</div>
+                            <div class="budget-stat-value">$${totals.totalActual.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="budget-stat-label">Variance</div>
+                            <div class="budget-stat-value">$${Math.abs(totals.variance).toFixed(2)}</div>
+                            ${formatVariance(totals.variance, true, totals.totalPlanned)}
+                        </div>
+                    </div>
+                `;
+                
+                list.appendChild(card);
+            });
+        }
+
+        function updateBudgetDetailView() {
+            if (!selectedBudget) return;
+            
+            const budget = budgets.find(b => b.id === selectedBudget);
+            if (!budget) return;
+            
+            const totals = calculateBudgetTotals(selectedBudget);
+            
+            document.getElementById('budgetDetailName').textContent = `${budget.emoji} ${budget.name}`;
+            document.getElementById('budgetPlanned').textContent = '$' + totals.totalPlanned.toFixed(2);
+            document.getElementById('budgetActual').textContent = '$' + totals.totalActual.toFixed(2);
+            document.getElementById('budgetVariance').textContent = '$' + Math.abs(totals.variance).toFixed(2);
+            document.getElementById('budgetPercent').textContent = totals.percent.toFixed(1) + '%';
+            
+            // Update categories list
+            const categoriesList = document.getElementById('categoriesList');
+            const budgetCategories = categories.filter(c => c.budgetId === selectedBudget);
+            
+            if (budgetCategories.length === 0) {
+                categoriesList.innerHTML = '<div class="no-data">No categories yet. Add one to start tracking!</div>';
+                return;
+            }
+            
+            categoriesList.innerHTML = '';
+            budgetCategories.forEach(category => {
+                const categoryTotals = calculateCategoryTotals(category.id);
+                const categoryItems = items.filter(i => i.categoryId === category.id);
+                
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                
+                let itemsHtml = '';
+                if (categoryItems.length === 0) {
+                    itemsHtml = '<div class="no-data" style="padding: 20px;">No items yet</div>';
+                } else {
+                    categoryItems.forEach(item => {
+                        const variance = (item.actual || 0) - item.spend;
+                        itemsHtml += `
+                            <div class="item-card" onclick="editItem('${item.id}', event)">
+                                <div class="item-header">
+                                    <div>
+                                        <div class="item-name">${item.name}</div>
+                                        ${item.description ? `<div class="item-description">${item.description}</div>` : ''}
+                                        ${item.supplier ? `<div class="item-supplier">Supplier: ${item.supplier}</div>` : ''}
+                                    </div>
+                                    <button class="icon-btn delete-btn" onclick="deleteItem('${item.id}', event)" title="Delete">🗑️</button>
+                                </div>
+                                <div class="item-amounts">
+                                    <div class="item-amount-group">
+                                        <div class="item-amount-label">Planned</div>
+                                        <div class="item-amount-value">$${item.spend.toFixed(2)}</div>
+                                    </div>
+                                    <div class="item-amount-group">
+                                        <div class="item-amount-label">Actual</div>
+                                        <div class="item-amount-value">${item.actual ? '$' + item.actual.toFixed(2) : '-'}</div>
+                                    </div>
+                                    <div class="item-amount-group">
+                                        <div class="item-amount-label">Variance</div>
+                                        ${formatVariance(variance)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                section.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title">${category.name}</div>
+                        <div class="category-totals">
+                            <div class="category-total-label">Planned: $${categoryTotals.totalPlanned.toFixed(2)} | Actual: $${categoryTotals.totalActual.toFixed(2)}</div>
+                            ${formatVariance(categoryTotals.variance, true, categoryTotals.totalPlanned)}
+                        </div>
+                    </div>
+                    ${itemsHtml}
+                    <button class="add-btn" onclick="showAddItemModal('${category.id}')">+ Add Item</button>
+                    <button class="icon-btn delete-btn" onclick="deleteCategory('${category.id}', event)" style="margin-top: 10px; opacity: 0.5;" title="Delete Category">🗑️ Delete Category</button>
+                `;
+                
+                categoriesList.appendChild(section);
+            });
+        }
+
+        // Utility functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Disclaimer functions
+        function openDisclaimer() {
+            document.getElementById('disclaimerDrawer').classList.add('open');
+            document.getElementById('disclaimerOverlay').classList.add('active');
+        }
+
+        function closeDisclaimer() {
+            document.getElementById('disclaimerDrawer').classList.remove('open');
+            document.getElementById('disclaimerOverlay').classList.remove('active');
+        }
+
+        // Theme management
+        const themes = {
+            coral: {
+                primaryStart: '#fb7185',
+                primaryEnd: '#be123c',
+                accentPrimary: '#fda4af',
+                accentSecondary: '#fb7185',
+                accentBg: '#fecdd3',
+                balanceStart: '#fda4af',
+                balanceEnd: '#fb7185'
+            },
+            lavender: {
+                primaryStart: '#a78bfa',
+                primaryEnd: '#7c3aed',
+                accentPrimary: '#c4b5fd',
+                accentSecondary: '#a78bfa',
+                accentBg: '#e9d5ff',
+                balanceStart: '#c4b5fd',
+                balanceEnd: '#a78bfa'
+            },
+            navy: {
+                primaryStart: '#1e3a8a',
+                primaryEnd: '#1e1b4b',
+                accentPrimary: '#475569',
+                accentSecondary: '#334155',
+                accentBg: '#e2e8f0',
+                balanceStart: '#475569',
+                balanceEnd: '#64748b'
+            },
+            charcoal: {
+                primaryStart: '#374151',
+                primaryEnd: '#1f2937',
+                accentPrimary: '#3b82f6',
+                accentSecondary: '#2563eb',
+                accentBg: '#dbeafe',
+                balanceStart: '#3b82f6',
+                balanceEnd: '#60a5fa'
+            },
+            sage: {
+                primaryStart: '#84cc16',
+                primaryEnd: '#65a30d',
+                accentPrimary: '#a3e635',
+                accentSecondary: '#84cc16',
+                accentBg: '#d9f99d',
+                balanceStart: '#a3e635',
+                balanceEnd: '#84cc16'
+            },
+            warmgray: {
+                primaryStart: '#78716c',
+                primaryEnd: '#57534e',
+                accentPrimary: '#f59e0b',
+                accentSecondary: '#d97706',
+                accentBg: '#fef3c7',
+                balanceStart: '#f59e0b',
+                balanceEnd: '#fbbf24'
+            }
+        };
+
+        function showThemeModal() {
+            document.getElementById('themeModal').classList.add('active');
+        }
+
+        function setTheme(themeName) {
+            const theme = themes[themeName];
+            if (!theme) return;
+
+            const root = document.documentElement;
+            root.style.setProperty('--primary-start', theme.primaryStart);
+            root.style.setProperty('--primary-end', theme.primaryEnd);
+            root.style.setProperty('--accent-primary', theme.accentPrimary);
+            root.style.setProperty('--accent-secondary', theme.accentSecondary);
+            root.style.setProperty('--accent-bg', theme.accentBg);
+            root.style.setProperty('--balance-start', theme.balanceStart);
+            root.style.setProperty('--balance-end', theme.balanceEnd);
+
+            localStorage.setItem('budgetingThingyTheme', themeName);
+            closeModal('themeModal');
+        }
+
+        // Load saved theme
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('budgetingThingyTheme');
+            if (savedTheme && themes[savedTheme]) {
+                setTheme(savedTheme);
+            }
+        });
+    </script>
+</body>
+</html>

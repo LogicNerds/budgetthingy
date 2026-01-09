@@ -1031,6 +1031,16 @@
                 </div>
             </div>
 
+            <!-- Share and Export Buttons -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <button class="action-btn" onclick="shareViaEmail()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                    📧 Share via Email
+                </button>
+                <button class="action-btn" onclick="downloadPDF()" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+                    📄 Download PDF
+                </button>
+            </div>
+
             <button class="add-btn" onclick="showAddCategoryModal()">+ Add Category</button>
 
             <!-- Categories and Items -->
@@ -1210,6 +1220,9 @@
         An Impactivists + Logic Nerds Collab | <a onclick="openDisclaimer()">Disclaimer</a>
     </div>
 
+    <!-- jsPDF Library for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -1267,6 +1280,8 @@
         window.setTheme = setTheme;
         window.openDisclaimer = openDisclaimer;
         window.closeDisclaimer = closeDisclaimer;
+        window.shareViaEmail = shareViaEmail;
+        window.downloadPDF = downloadPDF;
 
         // Auth state observer
         onAuthStateChanged(auth, (user) => {
@@ -1998,6 +2013,243 @@
                 setTheme(savedTheme);
             }
         });
+
+        // Share via Email function
+        function shareViaEmail() {
+            if (!selectedBudget) {
+                alert('No budget selected!');
+                return;
+            }
+
+            const budget = budgets.find(b => b.id === selectedBudget);
+            if (!budget) return;
+
+            const totals = calculateBudgetTotals(selectedBudget);
+            const budgetCategories = categories.filter(c => c.budgetId === selectedBudget);
+            
+            // Build email body
+            let body = `${budget.emoji} ${budget.name.toUpperCase()} BUDGET REPORT\n`;
+            body += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+            body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            body += `BUDGET SUMMARY\n`;
+            body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            body += `Total Planned: $${totals.totalPlanned.toFixed(2)}\n`;
+            body += `Total Actual: $${totals.totalActual.toFixed(2)}\n`;
+            
+            const varianceText = totals.variance >= 0 
+                ? `$${Math.abs(totals.variance).toFixed(2)} over budget` 
+                : `$${Math.abs(totals.variance).toFixed(2)} under budget`;
+            const percentText = totals.totalPlanned > 0 
+                ? ` (${Math.abs((totals.variance / totals.totalPlanned) * 100).toFixed(1)}%)`
+                : '';
+            body += `Variance: ${varianceText}${percentText}\n\n`;
+
+            // Add categories and items
+            budgetCategories.forEach(category => {
+                const categoryTotals = calculateCategoryTotals(category.id);
+                const categoryItems = items.filter(i => i.categoryId === category.id);
+                
+                body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                body += `${category.name.toUpperCase()} - $${categoryTotals.totalPlanned.toFixed(2)} → $${categoryTotals.totalActual.toFixed(2)}\n`;
+                body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                
+                if (categoryItems.length === 0) {
+                    body += `  No items yet\n\n`;
+                } else {
+                    categoryItems.forEach(item => {
+                        const itemVariance = (item.actual || 0) - item.spend;
+                        const varianceLabel = itemVariance >= 0 ? 'over' : 'under';
+                        
+                        body += `  • ${item.name}\n`;
+                        body += `    Planned: $${item.spend.toFixed(2)} | Actual: ${item.actual ? '$' + item.actual.toFixed(2) : 'Not entered'}\n`;
+                        
+                        if (item.actual !== null) {
+                            body += `    Variance: $${Math.abs(itemVariance).toFixed(2)} ${varianceLabel}\n`;
+                        }
+                        
+                        if (item.supplier) {
+                            body += `    Supplier: ${item.supplier}\n`;
+                        }
+                        
+                        if (item.description) {
+                            body += `    Note: ${item.description}\n`;
+                        }
+                        
+                        body += `\n`;
+                    });
+                }
+            });
+
+            body += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            body += `Generated by Budgeting Thingy\n`;
+            body += `An Impactivists + Logic Nerds Collab`;
+
+            // Create mailto link
+            const subject = encodeURIComponent(`${budget.emoji} ${budget.name} - Budget Report`);
+            const mailtoBody = encodeURIComponent(body);
+            const mailtoLink = `mailto:?subject=${subject}&body=${mailtoBody}`;
+            
+            // Open email client
+            window.location.href = mailtoLink;
+        }
+
+        // Download PDF function
+        function downloadPDF() {
+            if (!selectedBudget) {
+                alert('No budget selected!');
+                return;
+            }
+
+            const budget = budgets.find(b => b.id === selectedBudget);
+            if (!budget) return;
+
+            const totals = calculateBudgetTotals(selectedBudget);
+            const budgetCategories = categories.filter(c => c.budgetId === selectedBudget);
+
+            // Initialize jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            let yPos = 20;
+            const leftMargin = 20;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            
+            // Helper function to check if we need a new page
+            function checkNewPage(spaceNeeded = 20) {
+                if (yPos + spaceNeeded > pageHeight - 20) {
+                    doc.addPage();
+                    yPos = 20;
+                    return true;
+                }
+                return false;
+            }
+
+            // Title
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${budget.emoji} ${budget.name}`, leftMargin, yPos);
+            yPos += 10;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100);
+            doc.text(`Budget Report - Generated: ${new Date().toLocaleDateString()}`, leftMargin, yPos);
+            yPos += 15;
+            
+            // Summary Box
+            doc.setDrawColor(13, 148, 136);
+            doc.setFillColor(240, 253, 250);
+            doc.roundedRect(leftMargin, yPos, pageWidth - 40, 30, 3, 3, 'FD');
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0);
+            doc.text('Budget Summary', leftMargin + 5, yPos + 8);
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Total Planned: $${totals.totalPlanned.toFixed(2)}`, leftMargin + 5, yPos + 16);
+            doc.text(`Total Actual: $${totals.totalActual.toFixed(2)}`, leftMargin + 5, yPos + 23);
+            
+            const varianceText = totals.variance >= 0 
+                ? `+$${Math.abs(totals.variance).toFixed(2)} over` 
+                : `-$${Math.abs(totals.variance).toFixed(2)} under`;
+            const percentText = totals.totalPlanned > 0 
+                ? ` (${Math.abs((totals.variance / totals.totalPlanned) * 100).toFixed(1)}%)`
+                : '';
+            
+            doc.setTextColor(totals.variance >= 0 ? 220 : 5, totals.variance >= 0 ? 38 : 150, totals.variance >= 0 ? 38 : 105);
+            doc.text(`Variance: ${varianceText}${percentText}`, pageWidth / 2, yPos + 16);
+            doc.text(`Budget Used: ${totals.percent.toFixed(1)}%`, pageWidth / 2, yPos + 23);
+            
+            yPos += 40;
+            doc.setTextColor(0);
+
+            // Categories and Items
+            budgetCategories.forEach((category, categoryIndex) => {
+                checkNewPage(40);
+                
+                const categoryTotals = calculateCategoryTotals(category.id);
+                const categoryItems = items.filter(i => i.categoryId === category.id);
+                
+                // Category Header
+                doc.setFillColor(51, 51, 51);
+                doc.rect(leftMargin, yPos, pageWidth - 40, 8, 'F');
+                
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(255);
+                doc.text(category.name.toUpperCase(), leftMargin + 3, yPos + 5.5);
+                
+                doc.text(`$${categoryTotals.totalPlanned.toFixed(2)} → $${categoryTotals.totalActual.toFixed(2)}`, 
+                    pageWidth - 25, yPos + 5.5, { align: 'right' });
+                
+                yPos += 12;
+                doc.setTextColor(0);
+                
+                if (categoryItems.length === 0) {
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'italic');
+                    doc.setTextColor(150);
+                    doc.text('No items in this category', leftMargin + 5, yPos);
+                    yPos += 10;
+                    doc.setTextColor(0);
+                } else {
+                    // Items
+                    categoryItems.forEach((item, itemIndex) => {
+                        checkNewPage(25);
+                        
+                        const itemVariance = (item.actual || 0) - item.spend;
+                        
+                        // Item box
+                        doc.setDrawColor(224, 224, 224);
+                        doc.setFillColor(249, 250, 251);
+                        doc.roundedRect(leftMargin + 2, yPos, pageWidth - 44, 20, 2, 2, 'FD');
+                        
+                        // Item name
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(item.name, leftMargin + 5, yPos + 5);
+                        
+                        // Amounts
+                        doc.setFontSize(8);
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(100);
+                        doc.text(`Planned: $${item.spend.toFixed(2)}`, leftMargin + 5, yPos + 10);
+                        doc.text(`Actual: ${item.actual ? '$' + item.actual.toFixed(2) : 'Not entered'}`, leftMargin + 5, yPos + 14);
+                        
+                        if (item.actual !== null) {
+                            const varianceColor = itemVariance >= 0 ? [220, 38, 38] : [5, 150, 105];
+                            doc.setTextColor(...varianceColor);
+                            const varianceLabel = itemVariance >= 0 ? 'over' : 'under';
+                            doc.text(`Variance: $${Math.abs(itemVariance).toFixed(2)} ${varianceLabel}`, leftMargin + 5, yPos + 18);
+                        }
+                        
+                        // Supplier
+                        if (item.supplier) {
+                            doc.setTextColor(100);
+                            doc.text(`Supplier: ${item.supplier}`, pageWidth / 2, yPos + 10);
+                        }
+                        
+                        yPos += 24;
+                        doc.setTextColor(0);
+                    });
+                }
+                
+                yPos += 5;
+            });
+
+            // Footer on last page
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text('Generated by Budgeting Thingy', pageWidth / 2, pageHeight - 15, { align: 'center' });
+            doc.text('An Impactivists + Logic Nerds Collab', pageWidth / 2, pageHeight - 10, { align: 'center' });
+            
+            // Save PDF
+            const fileName = `${budget.name.replace(/[^a-z0-9]/gi, '_')}_Budget_Report.pdf`;
+            doc.save(fileName);
+        }
     </script>
 </body>
 </html>
